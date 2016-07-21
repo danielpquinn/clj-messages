@@ -9,4 +9,4 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
-/src/messages/config.clj
+src/messages/config.clj
