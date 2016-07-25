@@ -9,23 +9,25 @@
 ;; Algorithm used to create signature
 
 (def algorithm "HmacSHA256")
+(def encoding "UTF-8")
 
 ;; Use java base64 util to encode token segments
 
 (def encoder (java.util.Base64/getUrlEncoder))
+(def decoder (java.util.Base64/getUrlDecoder))
 
 ;; Convert a string to a byte array and use encoder to get base64 url encoded string
 
 (defn encode-base64url [string]
-  (.encodeToString encoder (.getBytes string)))
+  (.encodeToString encoder (.getBytes string encoding)))
 
 ;; Generate a signature given a secret and some data
 
 (defn generate-signature [secret data]
   (let [mac (javax.crypto.Mac/getInstance algorithm)
-        key (javax.crypto.spec.SecretKeySpec. (.getBytes secret) algorithm)]
+        key (javax.crypto.spec.SecretKeySpec. (.getBytes secret encoding) algorithm)]
           (.init mac key)
-          (.encodeToString encoder (.doFinal mac (.getBytes data)))))
+          (.encodeToString encoder (.doFinal mac (.getBytes data encoding)))))
 
 ;; Generate a token
 
@@ -41,3 +43,10 @@
         payload (first parts)
         signature (last parts)]
         (= (generate-signature secret payload) signature)))
+
+;; Decode a tokens content
+
+(defn decode-token [token]
+  (let [parts (str/split token #"\.")
+        payload (first parts)]
+          (java.lang.String. (.decode decoder payload) encoding)))

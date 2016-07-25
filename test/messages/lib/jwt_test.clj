@@ -18,15 +18,22 @@
 ;; Test token validation
 
 (deftest validate-token-valid
-  (testing "jwt/validate-token is valid"
+  (testing "jwt/validate-token"
     (let [token (jwt/generate-token "foo" "{\"some\":\"json\"}")]
       (is (= (jwt/validate-token "foo" token) true)))))
 
 ;; Test that token that has been tempered with is invalid
 
 (deftest validate-token-invalid
-  (testing "jwt/validate-token is invalid"
+  (testing "jwt/validate-token"
     (let [token (jwt/generate-token "foo" "{\"some\":\"json\"}")
           signature (last (str/split token #"\."))
           tampered-token (str (jwt/encode-base64url "{\"bad\":\"payload\"}") "." signature)]
             (is (= (jwt/validate-token "foo" tampered-token) false)))))
+
+;; Test that decoded message matches original
+
+(deftest decode-token
+  (testing "jwt/testing"
+    (let [token (jwt/generate-token "foo" "{\"some\":\"json\"}")]
+           (is (= (jwt/decode-token token) "{\"some\":\"json\"}")))))
