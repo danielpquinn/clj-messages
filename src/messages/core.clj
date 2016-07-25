@@ -14,10 +14,15 @@
   messages/routes
   users/routes)
 
+;; Add middleware
+
 (def app (-> (handler/api app-routes)
   wrap-json/wrap-json
   wrap-cors/wrap-cors
   wrap-error-handler/wrap-error-handler))
 
+;; Start server
+
 (jetty/run-jetty app {:port 3000})
+
 

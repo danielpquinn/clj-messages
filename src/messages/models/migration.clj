@@ -12,19 +12,18 @@
                         "where table_name='" table "'")])
       first :count pos?))
 
+(defn drop-table! [name key]
+  (if (table-exists? name)
+    (do
+      (jdbc/db-do-commands config/connection-string
+                           (jdbc/drop-table-ddl key))
+      (println (str "Dropped table " name)))))
+
 ;; Drop existing tables
 
-(if (table-exists? "messages")
-  (do
-    (jdbc/db-do-commands config/connection-string
-                         (jdbc/drop-table-ddl :messages))
-    (println "Dropped table messages")))
-
-(if (table-exists? "users")
-  (do
-    (jdbc/db-do-commands config/connection-string
-                         (jdbc/drop-table-ddl :users))
-    (println "Dropped table users")))
+(drop-table! "messages" :messages)
+(drop-table! "tokens" :tokens)
+(drop-table! "users" :users)
 
 ;; Create users table
 
@@ -33,7 +32,7 @@
                        :users
                        [[:id :serial "PRIMARY KEY"]
                         [:email :varchar "UNIQUE" "NOT NULL"]
-                        [:username :varchar "NOT NULL"]
+                        [:username :varchar "UNIQUE" "NOT NULL"]
                         [:password :varchar "NOT NULL"]
                         [:email_verified :boolean "NOT NULL" "DEFAULT FALSE"]
                         [:created_at :timestamp "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"]]))
@@ -50,11 +49,13 @@
                         [:user_id :integer "NOT NULL" "REFERENCES users (id)" "ON DELETE CASCADE"]
                         [:created_at :timestamp "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"]]))
 
-;; Create an admin user
+;; Create tokens table
 
-(jdbc/insert! config/connection-string
-              :users
-              [:email :username :password]
-              ["admin@messages.com" "admin" "admin"])
+(jdbc/db-do-commands config/connection-string
+                     (jdbc/create-table-ddl
+                       :tokens
+                       [[:id :serial "PRIMARY KEY"]
+                        [:token :varchar "NOT NULL"]
+                        [:user_id :integer "NOT NULL" "REFERENCES users (id)" "ON DELETE CASCADE"]]))
 
 (println "Created messages table")

@@ -21,6 +21,18 @@
        (<= (count (get user "password")) 30)
        (not= (re-matches #"^\S+@\S+\.\S+$" (get user "email")) nil)))
 
+;; Find users where value matches a given key
+
+(defn find-where [field value]
+  (println (str "select * from users where " field " = '" value "'"))
+  (into [] (jdbc/query config/connection-string
+                       [(str "select * from users where " field " = '" value "'")])))
+
+;; Serialize user
+
+(defn serialize [user]
+  (select-keys user [:username :email :id]))
+
 ;; Create a new user
 
 (defn create! [user]
@@ -30,4 +42,6 @@
     (jdbc/insert! config/connection-string
                   :users
                   [:email :username :password]
-                  [(get user "email") (get user "username") hashed])))
+                  [(get user "email") (get user "username") hashed])
+    (let [created-users (find-where "email" (get user "email"))]
+      (serialize (get created-users 0)))))
